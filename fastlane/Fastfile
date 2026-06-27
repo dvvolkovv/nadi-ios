@@ -41,6 +41,14 @@ platform :ios do
       in_house: false
     )
 
+    # altool ищет ключ строго в ~/.appstoreconnect/private_keys/AuthKey_<id>.p8 —
+    # флаг --apiKeyPath игнорируется в свежем Xcode. Кладём идемпотентно.
+    altool_keys = File.expand_path("~/.appstoreconnect/private_keys")
+    FileUtils.mkdir_p(altool_keys)
+    altool_key = "#{altool_keys}/AuthKey_#{ENV.fetch('ASC_KEY_ID')}.p8"
+    FileUtils.cp(ENV.fetch("ASC_KEY_PATH"), altool_key) unless File.exist?(altool_key)
+    FileUtils.chmod(0600, altool_key)
+
     latest = (latest_testflight_build_number(app_identifier: "com.gsmsoft.nadi", api_key: api_key) rescue 0)
     new_build = latest.to_i + 1
     increment_build_number(build_number: new_build, xcodeproj: "Nadi.xcodeproj")
@@ -77,11 +85,20 @@ platform :ios do
       }
     )
 
-    upload_to_testflight(
-      api_key: api_key,
-      skip_waiting_for_build_processing: true,
-      changelog: "Nadi build #{new_build}",
-      app_identifier: "com.gsmsoft.nadi"
+    # Загружаем напрямую через altool. Fastlane pilot формирует bearer-токен
+    # для contentDelivery так, что Apple возвращает "Authentication credentials
+    # are missing or invalid" — даже когда сам ASC API ключ рабочий
+    # (latest_testflight_build_number выше идёт через тот же ключ и проходит).
+    # altool — официальный аплоадер Apple, ходит тем же ключом.
+    ipa_path = File.expand_path("../build/Nadi.ipa", __dir__)
+    UI.user_error!("IPA missing at #{ipa_path}") unless File.exist?(ipa_path)
+    sh(
+      "xcrun", "altool", "--upload-app",
+      "-f", ipa_path,
+      "--type", "ios",
+      "--apiKey", ENV.fetch("ASC_KEY_ID"),
+      "--apiIssuer", ENV.fetch("ASC_ISSUER_ID")
     )
+    UI.success("Build #{new_build} uploaded to TestFlight — обработка займёт 5–15 мин на стороне Apple.")
   end
 end
