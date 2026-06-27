@@ -35,5 +35,7 @@ targets:
     platform: iOS
     sources:
       - path: Sources/NadiTests
+    info:
+      path: Sources/NadiTests/Info.plist
     dependencies:
       - target: Nadi
