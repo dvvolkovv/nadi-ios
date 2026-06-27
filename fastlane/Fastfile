@@ -55,7 +55,8 @@ platform :ios do
     UI.user_error!("Provisioning profile missing at #{profile_path}") unless File.exist?(profile_path)
     install_provisioning_profile(path: profile_path)
 
-    # Manual signing — explicit cert + profile name via xcargs.
+    # Manual signing — explicit cert + profile name via xcargs (for archive
+    # phase) and export_options (for export/packaging phase).
     build_app(
       project: "Nadi.xcodeproj",
       scheme: "Nadi",
@@ -65,7 +66,15 @@ platform :ios do
       include_bitcode: false,
       include_symbols: true,
       clean: true,
-      xcargs: "PROVISIONING_PROFILE_SPECIFIER=\"com.gsmsoft.nadi AppStore\" CODE_SIGN_IDENTITY=\"Apple Distribution\" DEVELOPMENT_TEAM=\"MG58MDUNZ2\" CODE_SIGN_STYLE=Manual"
+      xcargs: "PROVISIONING_PROFILE_SPECIFIER=\"com.gsmsoft.nadi AppStore\" CODE_SIGN_IDENTITY=\"Apple Distribution\" DEVELOPMENT_TEAM=\"MG58MDUNZ2\" CODE_SIGN_STYLE=Manual",
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.gsmsoft.nadi" => "com.gsmsoft.nadi AppStore"
+        },
+        teamID: "MG58MDUNZ2"
+      }
     )
 
     upload_to_testflight(
