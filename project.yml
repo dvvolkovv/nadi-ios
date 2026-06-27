@@ -14,6 +14,7 @@ settings:
     SWIFT_VERSION: "5.10"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
     ENABLE_BITCODE: NO
+    TARGETED_DEVICE_FAMILY: "1"
 targets:
   Nadi:
     type: application
