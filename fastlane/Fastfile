@@ -45,6 +45,17 @@ platform :ios do
     new_build = latest.to_i + 1
     increment_build_number(build_number: new_build, xcodeproj: "Nadi.xcodeproj")
 
+    # Auto-create or fetch App Store provisioning profile for com.gsmsoft.nadi.
+    # Skips certificate creation since the Apple Distribution cert is already
+    # in the login keychain (shared with poolwatt/trientes under gsmsoft team).
+    get_provisioning_profile(
+      app_identifier: "com.gsmsoft.nadi",
+      adhoc: false,
+      development: false,
+      skip_certificate_verification: false,
+      ignore_profiles_with_different_name: true
+    )
+
     build_app(
       project: "Nadi.xcodeproj",
       scheme: "Nadi",
