@@ -50,9 +50,6 @@ platform :ios do
     # in the login keychain (shared with poolwatt/trientes under gsmsoft team).
     get_provisioning_profile(
       app_identifier: "com.gsmsoft.nadi",
-      adhoc: false,
-      development: false,
-      skip_certificate_verification: false,
       ignore_profiles_with_different_name: true
     )
 
