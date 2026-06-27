@@ -1,0 +1,39 @@
+name: Nadi
+options:
+  bundleIdPrefix: com.gsmsoft
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: uk
+settings:
+  base:
+    DEVELOPMENT_TEAM: MG58MDUNZ2
+    CODE_SIGN_STYLE: Manual
+    PRODUCT_BUNDLE_IDENTIFIER: com.gsmsoft.nadi
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "0.1.0"
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    ENABLE_BITCODE: NO
+targets:
+  Nadi:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/Nadi
+    info:
+      path: Sources/Nadi/Info.plist
+      properties:
+        CFBundleDisplayName: Nadi
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UILaunchScreen:
+          UIColorName: ""
+  NadiTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Sources/NadiTests
+    dependencies:
+      - target: Nadi

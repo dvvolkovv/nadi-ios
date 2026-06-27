@@ -1,0 +1,26 @@
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+.build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/.env*
+# XCodeGen output (regenerated on every build)
+Nadi.xcodeproj/
+# macOS
+.DS_Store
+# IDE
+.vscode/
+.idea/
+# Bundler
+vendor/bundle/
+.bundle/

@@ -1,0 +1,65 @@
+default_platform(:ios)
+
+platform :ios do
+  before_all do
+    # Regenerate Xcode project on every lane run (project.yml is source of truth)
+    Dir.chdir(File.expand_path('..', __dir__)) do
+      sh("xcodegen generate") if File.exist?('project.yml')
+    end
+  end
+
+  desc "Build for simulator + run unit tests"
+  lane :build_sim do
+    run_tests(
+      project: "Nadi.xcodeproj",
+      scheme: "Nadi",
+      device: "iPhone 17",
+      clean: true,
+      code_coverage: false,
+      skip_slack: true
+    )
+  end
+
+  desc "Build + upload to TestFlight"
+  lane :release_testflight do
+    keychain_pw_path = File.expand_path("~/.config/nadi-ios/keychain.pw")
+    UI.user_error!("keychain.pw missing at #{keychain_pw_path}") unless File.exist?(keychain_pw_path)
+    keychain_pw = File.read(keychain_pw_path).strip
+
+    unlock_keychain(
+      path: File.expand_path("~/Library/Keychains/login.keychain-db"),
+      password: keychain_pw,
+      add_to_search_list: false,
+      set_default: false
+    )
+
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      duration: 1200,
+      in_house: false
+    )
+
+    latest = (latest_testflight_build_number(app_identifier: "com.gsmsoft.nadi") rescue 0)
+    new_build = latest.to_i + 1
+    increment_build_number(build_number: new_build, xcodeproj: "Nadi.xcodeproj")
+
+    build_app(
+      project: "Nadi.xcodeproj",
+      scheme: "Nadi",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      include_bitcode: false,
+      include_symbols: true,
+      clean: true
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: "Nadi build #{new_build}",
+      app_identifier: "com.gsmsoft.nadi"
+    )
+  end
+end
