@@ -45,18 +45,17 @@ platform :ios do
     new_build = latest.to_i + 1
     increment_build_number(build_number: new_build, xcodeproj: "Nadi.xcodeproj")
 
-    # Auto-create or fetch App Store provisioning profile for com.gsmsoft.nadi.
-    # Skips certificate creation since the Apple Distribution cert is already
-    # in the login keychain (shared with poolwatt/trientes under gsmsoft team).
-    # Explicit api_key avoids re-auth issues between actions.
-    get_provisioning_profile(
-      app_identifier: "com.gsmsoft.nadi",
-      api_key: api_key,
-      ignore_profiles_with_different_name: true
-    )
+    # Use committed provisioning profile (trientes-style).
+    # Background: sigh queries the Apple Developer Portal API, not App Store
+    # Connect API — our .p8 key is scoped to ASC only, so sigh fails auth.
+    # The profile was generated once via sigh on Mac (with web-auth) and
+    # committed to the repo. Re-run sigh manually with `fastlane spaceauth`
+    # if the profile expires (1 year) or the bundle ID changes.
+    profile_path = File.expand_path("../AppStore_com.gsmsoft.nadi.mobileprovision", __dir__)
+    UI.user_error!("Provisioning profile missing at #{profile_path}") unless File.exist?(profile_path)
+    install_provisioning_profile(path: profile_path)
 
-    # Manual signing — explicit cert + profile via xcargs.
-    # Profile name from sigh (lane_context); cert by partial name match.
+    # Manual signing — explicit cert + profile name via xcargs.
     build_app(
       project: "Nadi.xcodeproj",
       scheme: "Nadi",
@@ -66,7 +65,7 @@ platform :ios do
       include_bitcode: false,
       include_symbols: true,
       clean: true,
-      xcargs: "PROVISIONING_PROFILE_SPECIFIER=\"#{lane_context[SharedValues::SIGH_NAME]}\" CODE_SIGN_IDENTITY=\"Apple Distribution\" DEVELOPMENT_TEAM=\"MG58MDUNZ2\" CODE_SIGN_STYLE=Manual"
+      xcargs: "PROVISIONING_PROFILE_SPECIFIER=\"com.gsmsoft.nadi AppStore\" CODE_SIGN_IDENTITY=\"Apple Distribution\" DEVELOPMENT_TEAM=\"MG58MDUNZ2\" CODE_SIGN_STYLE=Manual"
     )
 
     upload_to_testflight(
